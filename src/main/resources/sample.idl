@@ -4,9 +4,9 @@
 //include "includeSample.idl"
 
 module moduleName {
-const int a = 1 << 3;
-const int b = (7 & 5) | (2 & a);
-	const int test =  1 + (5 * 2 + 8 / 3);
+	const int a = (1 << 3) + 2;
+	const int b = (7 & 5) | (3 ^ a);
+	const int test =  1 + (5 * 2 + (8.0 / 2.5));
 	enum TemperatureScale {
 	    CELSIUS, 
 	    FAHRENHEIT,
@@ -20,7 +20,7 @@ const int b = (7 & 5) | (2 & a);
 	  
 	  struct TempSensorType {
 	   sequence<short,4> id; //@key
-	    float temp[-(2 + 0x1A)][8];
+	    float temp[-(2 + 0x1A)][b];
 	    float hum;
 	    TemperatureScale scale;
 	    string<4> toto;

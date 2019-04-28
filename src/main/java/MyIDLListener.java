@@ -43,9 +43,9 @@ import IDL.IDLParserBaseListener;
 
 public class MyIDLListener extends IDLParserBaseListener {
 
-	ParseTreeProperty<Integer> expressionsEvaluatorValues = new ParseTreeProperty<>();
+	ParseTreeProperty<Object> expressionsEvaluatorValues = new ParseTreeProperty<>();
 
-	HashMap<String,Integer> constValues = new HashMap<>();
+	HashMap<String,Object> constValues = new HashMap<>();
 	
 	Deque<Type> typeStack = new ArrayDeque<>();
 	MyIDLListener() {
@@ -198,7 +198,7 @@ public class MyIDLListener extends IDLParserBaseListener {
 
 	@Override
 	public void exitConst_decl(Const_declContext ctx) {
-		Integer val = expressionsEvaluatorValues.get(ctx.const_exp());
+		Object val = expressionsEvaluatorValues.get(ctx.const_exp());
 		if(val != null) {
 			constValues.put(ctx.ID().getText(), val);
 		}
@@ -217,7 +217,7 @@ public class MyIDLListener extends IDLParserBaseListener {
 
 	@Override
 	public void exitConst_exp(Const_expContext ctx) {
-		Integer val = expressionsEvaluatorValues.get(ctx.or_expr());
+		Object val = expressionsEvaluatorValues.get(ctx.or_expr());
 		expressionsEvaluatorValues.put(ctx,val);
 		if( val != null) {
 			typeStack.peek().value += " (val : " + val + ")";
@@ -232,7 +232,11 @@ public class MyIDLListener extends IDLParserBaseListener {
 		} else if(ctx.const_exp() != null){
 			expressionsEvaluatorValues.put(ctx, expressionsEvaluatorValues.get(ctx.const_exp()));
 		} else if(ctx.scoped_name() != null){
-			expressionsEvaluatorValues.put(ctx, expressionsEvaluatorValues.get(ctx.scoped_name()));
+			String nameAndScope = ctx.scoped_name().getText();
+			Object val = constValues.get(nameAndScope);
+			if( val != null) {
+				expressionsEvaluatorValues.put(ctx, val);
+			}
 		}
 	}
 
@@ -270,13 +274,20 @@ public class MyIDLListener extends IDLParserBaseListener {
 	@Override
 	public void exitUnary_expr(Unary_exprContext ctx) {
 
-		Integer val = expressionsEvaluatorValues.get(ctx.primary_expr());
+		Object val = expressionsEvaluatorValues.get(ctx.primary_expr());
 		if( val != null) {
 			if( ctx.unary_operator() != null) {
 				if( ctx.unary_operator().MINUS() != null) {
-					val = -val;
+					if( val instanceof Integer) {
+						val = - (Integer) val;
+					} else if (val instanceof Float) {
+						val = - (Float) val;
+					}
+						
 				} else if( ctx.unary_operator().TILDE() != null) {
-					val = ~val;
+					if( val instanceof Integer) {
+						val = ~ (Integer) val;
+					}
 				}
 			}
 			expressionsEvaluatorValues.put(ctx, val);
@@ -302,8 +313,7 @@ public class MyIDLListener extends IDLParserBaseListener {
 	@Override
 	public void exitFloatLiteral(FloatLiteralContext ctx) {
 		Float val = Float.valueOf(ctx.getText());
-		//// TODO
-		expressionsEvaluatorValues.put(ctx, val.intValue());
+		expressionsEvaluatorValues.put(ctx, val);
 	}
 
 	@Override
@@ -313,9 +323,21 @@ public class MyIDLListener extends IDLParserBaseListener {
 		expressionsEvaluatorValues.put(ctx, val ? 1 : 0);
 	}
 
-
+	
 	private void evalOneLevelOfMathExpr(ParseTree tree) {
-		Integer val = expressionsEvaluatorValues.get(tree.getChild(0));
+		Object val = expressionsEvaluatorValues.get(tree.getChild(0));
+		if( val != null) {
+			if( val instanceof Integer) {
+				val = evalOneLevelOfMathExprInteger(tree);
+			} else if( val instanceof Float) {
+				val = evalOneLevelOfMathExprFloat(tree);
+			}
+		}
+		
+	}
+	
+	private Integer evalOneLevelOfMathExprInteger(ParseTree tree) {
+		Integer val = (Integer) expressionsEvaluatorValues.get(tree.getChild(0));
 		if( val != null) {
 			int i  = 1;
 			while (i < tree.getChildCount()) {
@@ -323,7 +345,18 @@ public class MyIDLListener extends IDLParserBaseListener {
 				ParseTree newChild = tree.getChild(i++);
 				if( opChild instanceof TerminalNode) {
 					int type = ((TerminalNode)opChild).getSymbol().getType();
-					Integer newChildVal = expressionsEvaluatorValues.get(newChild);
+					Object newChildObject = expressionsEvaluatorValues.get(newChild);
+					
+					Integer newChildVal;
+					if( newChildObject instanceof Integer) {
+						newChildVal = (Integer) newChildObject;
+					} else if (newChildObject instanceof Float) {
+						newChildVal = ((Float) newChildObject).intValue();
+					} else {
+						/// TODO ERROR
+						System.out.println("OOPS");
+						continue;
+					}
 					
 					if( newChildVal != null) {
 						
@@ -366,10 +399,64 @@ public class MyIDLListener extends IDLParserBaseListener {
 					}	
 				}	
 			}
-			expressionsEvaluatorValues.put(tree, val);
 		}
+		return val;
 		
 	}
+	
+	private Float evalOneLevelOfMathExprFloat(ParseTree tree) {
+		Float val = (Float)expressionsEvaluatorValues.get(tree.getChild(0));
+		if( val != null) {
+			int i  = 1;
+			while (i < tree.getChildCount()) {
+				ParseTree opChild = tree.getChild(i++);
+				ParseTree newChild = tree.getChild(i++);
+				if( opChild instanceof TerminalNode) {
+					int type = ((TerminalNode)opChild).getSymbol().getType();
+					
+
+					Object newChildObject = expressionsEvaluatorValues.get(newChild);
+					Float newChildVal;
+					if( newChildObject instanceof Float) {
+						newChildVal = (Float) newChildObject;
+					} else if (newChildObject instanceof Integer) {
+						newChildVal =(float) ((Integer) newChildObject);
+					} else {
+						/// TODO ERROR
+						continue;
+					}
+					
+					if( newChildVal != null) {
+						
+						switch(type)  {
+						case IDLParser.PLUS:
+							val += newChildVal;
+							break;
+						case IDLParser.MINUS:
+							val -= newChildVal;
+							break;
+						case IDLParser.STAR:
+							val *= newChildVal;
+							break;
+						case IDLParser.SLASH:
+							val /= newChildVal;
+							break;
+						case IDLParser.PERCENT:
+							val %= newChildVal;
+							break;
+							
+						default:
+							System.err.println("OOPS!");
+							break;
+						}
+					}	
+				}	
+			}
+		}
+		return val;
+	}
+	
+	
 	
 
 	/*
