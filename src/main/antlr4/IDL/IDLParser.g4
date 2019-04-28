@@ -220,6 +220,10 @@ and_expr
 shift_expr
    : add_expr ((RIGHT_SHIFT | LEFT_SHIFT) add_expr)*
    ;
+   
+shift_shiftop
+	: shiftop=(RIGHT_SHIFT | LEFT_SHIFT) shiftby=add_expr
+	;
 
 add_expr
    : mult_expr ((PLUS | MINUS) mult_expr)*
@@ -230,7 +234,7 @@ mult_expr
    ;
 
 unary_expr
-   : unary_operator primary_expr
+   : op=unary_operator primary_expr
    | primary_expr
    ;
 
@@ -245,7 +249,12 @@ primary_expr
    ;
 
 literal
-   : (HEX_LITERAL | INTEGER_LITERAL | STRING_LITERAL | WIDE_STRING_LITERAL | CHARACTER_LITERAL | WIDE_CHARACTER_LITERAL | FIXED_PT_LITERAL | FLOATING_PT_LITERAL | BOOLEAN_LITERAL)
+   : HEX_LITERAL #hexLitteral
+   | INTEGER_LITERAL #intLitteral
+//   | STRING_LITERAL 
+//   | WIDE_STRING_LITERAL | CHARACTER_LITERAL | WIDE_CHARACTER_LITERAL | FIXED_PT_LITERAL 
+	| FLOATING_PT_LITERAL #floatLiteral
+	| BOOLEAN_LITERAL #boolLiteral
    ;
 
 positive_int_const
