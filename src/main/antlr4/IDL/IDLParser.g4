@@ -185,7 +185,7 @@ init_param_attribute
    ;
 
 const_decl
-   : KW_CONST const_type ID EQUAL const_exp
+   : KW_CONST const_type name=ID EQUAL const_exp
    ;
 
 const_type
@@ -220,10 +220,6 @@ and_expr
 shift_expr
    : add_expr ((RIGHT_SHIFT | LEFT_SHIFT) add_expr)*
    ;
-   
-shift_shiftop
-	: shiftop=(RIGHT_SHIFT | LEFT_SHIFT) shiftby=add_expr
-	;
 
 add_expr
    : mult_expr ((PLUS | MINUS) mult_expr)*
@@ -234,7 +230,7 @@ mult_expr
    ;
 
 unary_expr
-   : op=unary_operator primary_expr
+   : unary_operator primary_expr
    | primary_expr
    ;
 

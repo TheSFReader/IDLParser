@@ -1,5 +1,6 @@
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -44,6 +45,8 @@ public class MyIDLListener extends IDLParserBaseListener {
 
 	ParseTreeProperty<Integer> expressionsEvaluatorValues = new ParseTreeProperty<>();
 
+	HashMap<String,Integer> constValues = new HashMap<>();
+	
 	Deque<Type> typeStack = new ArrayDeque<>();
 	MyIDLListener() {
 		typeStack.push(new Type("Root",""));
@@ -195,6 +198,10 @@ public class MyIDLListener extends IDLParserBaseListener {
 
 	@Override
 	public void exitConst_decl(Const_declContext ctx) {
+		Integer val = expressionsEvaluatorValues.get(ctx.const_exp());
+		if(val != null) {
+			constValues.put(ctx.ID().getText(), val);
+		}
 		popType();
 	}
 
@@ -217,7 +224,7 @@ public class MyIDLListener extends IDLParserBaseListener {
 		}
 		popType();
 	}
-	
+
 	@Override
 	public void exitPrimary_expr(Primary_exprContext ctx) {
 		if(ctx.literal() != null) {
@@ -228,166 +235,54 @@ public class MyIDLListener extends IDLParserBaseListener {
 			expressionsEvaluatorValues.put(ctx, expressionsEvaluatorValues.get(ctx.scoped_name()));
 		}
 	}
-	
+
 	@Override
 	public void exitOr_expr(Or_exprContext ctx) {
-		
-		Integer val = 0;
-		boolean found = false;
-		for(Xor_exprContext xor :  ctx.xor_expr()) {
-			Integer newVal = expressionsEvaluatorValues.get(xor);
-			if(newVal !=null) {
-				val |= newVal;
-				found = true;
-			}
-		}
-		if( found)
-		{
-			expressionsEvaluatorValues.put(ctx, val);
-		}
+		evalOneLevelOfMathExpr(ctx);
 	}
-	
+
 	@Override
 	public void exitXor_expr(Xor_exprContext ctx) {
-		
-		Integer val = 0;
-		boolean found = false;
-		for(And_exprContext and :  ctx.and_expr()) {
-			Integer newVal = expressionsEvaluatorValues.get(and);
-			if(newVal !=null) {
-				val ^= newVal;
-				found = true;
-			}
-		}
-		if( found)
-		{
-			expressionsEvaluatorValues.put(ctx, val);
-		}
+		evalOneLevelOfMathExpr(ctx);
 	}
-	
+
 	@Override
 	public void exitAnd_expr(And_exprContext ctx) {
-		
-		Integer val = expressionsEvaluatorValues.get(ctx.shift_expr().get(0));
-		if( val != null) {
-			boolean found = false;
-			for(Shift_exprContext and :  ctx.shift_expr()) {
-				Integer newVal = expressionsEvaluatorValues.get(and);
-				if(newVal !=null) {
-					val &= newVal;
-					found = true;
-				}
-			}
-			if( found)
-			{
-				expressionsEvaluatorValues.put(ctx, val);
-			}
-		}
+		evalOneLevelOfMathExpr(ctx);
 	}
 	
 	@Override
 	public void exitShift_expr(Shift_exprContext ctx) {
-		Integer val = expressionsEvaluatorValues.get(ctx.add_expr().get(0));
-		if( val != null)
-		{
-			int i  = 1;
-			while (i < ctx.getChildCount()) {
-				ParseTree opChild = ctx.getChild(i++);
-				ParseTree shiftByChild = ctx.getChild(i++);
-				if( opChild instanceof TerminalNode) {
-					int type = ((TerminalNode)opChild).getSymbol().getType();
-					Integer shiftByVal = expressionsEvaluatorValues.get(shiftByChild);
-					if( shiftByVal != null) {
-						if( type== IDLParser.RIGHT_SHIFT) {
-							val >>= shiftByVal;
-						} else if(type== IDLParser.LEFT_SHIFT) {
-							val <<= shiftByVal;
-						} else {
-							System.err.println("OOPS");
-						}
-					}	
-				}	
-			}
-			expressionsEvaluatorValues.put(ctx, val);
-		}
-		
+		evalOneLevelOfMathExpr(ctx);
 	}
 
 	@Override
 	public void exitAdd_expr(Add_exprContext ctx) {
-		Integer val = expressionsEvaluatorValues.get(ctx.mult_expr().get(0));
-		if( val != null)
-		{
-			int i  = 1;
-			while (i < ctx.getChildCount()) {
-				ParseTree opChild = ctx.getChild(i++);
-				ParseTree addChild = ctx.getChild(i++);
-				if( opChild instanceof TerminalNode) {
-					int type = ((TerminalNode)opChild).getSymbol().getType();
-					Integer addVal = expressionsEvaluatorValues.get(addChild);
-					if( addVal != null) {
-						if( type== IDLParser.PLUS) {
-							val += addVal;
-						} else if(type== IDLParser.MINUS) {
-							val -= addVal;
-						} else {
-							System.err.println("OOPS");
-						}
-					}	
-				}	
-			}
-			expressionsEvaluatorValues.put(ctx, val);
-		}
-		
+		evalOneLevelOfMathExpr(ctx);
 	}
-	
+
 	@Override
 	public void exitMult_expr(Mult_exprContext ctx) {
-		Integer val = expressionsEvaluatorValues.get(ctx.unary_expr().get(0));
-		if( val != null)
-		{
-			int i  = 1;
-			while (i < ctx.getChildCount()) {
-				ParseTree opChild = ctx.getChild(i++);
-				ParseTree mulChild = ctx.getChild(i++);
-				if( opChild instanceof TerminalNode) {
-					int type = ((TerminalNode)opChild).getSymbol().getType();
-					Integer mulVal = expressionsEvaluatorValues.get(mulChild);
-					if( mulVal != null) {
-						if( type== IDLParser.STAR) {
-							val *= mulVal;
-						} else if(type== IDLParser.SLASH) {
-							val /= mulVal;
-						} else if(type== IDLParser.PERCENT) {
-							val %= mulVal;
-						} else {
-							System.err.println("OOPS");
-						}
-					}	
-				}	
+		evalOneLevelOfMathExpr(ctx);
+	}
+
+
+	@Override
+	public void exitUnary_expr(Unary_exprContext ctx) {
+
+		Integer val = expressionsEvaluatorValues.get(ctx.primary_expr());
+		if( val != null) {
+			if( ctx.unary_operator() != null) {
+				if( ctx.unary_operator().MINUS() != null) {
+					val = -val;
+				} else if( ctx.unary_operator().TILDE() != null) {
+					val = ~val;
+				}
 			}
 			expressionsEvaluatorValues.put(ctx, val);
 		}
-		
-	}
-	
 
-@Override
-public void exitUnary_expr(Unary_exprContext ctx) {
-	
-	Integer val = expressionsEvaluatorValues.get(ctx.primary_expr());
-	if( val != null) {
-		if( ctx.op != null) {
-			if( ctx.op.MINUS() != null) {
-				val = -val;
-			} if( ctx.op.TILDE() != null) {
-				val = ~val;
-			}
-		}
-		expressionsEvaluatorValues.put(ctx, val);
 	}
-	
-}
 
 
 	@Override
@@ -403,14 +298,14 @@ public void exitUnary_expr(Unary_exprContext ctx) {
 		Integer val = Integer.valueOf(hexString, 16);
 		expressionsEvaluatorValues.put(ctx, val);
 	}
-	
+
 	@Override
 	public void exitFloatLiteral(FloatLiteralContext ctx) {
 		Float val = Float.valueOf(ctx.getText());
 		//// TODO
 		expressionsEvaluatorValues.put(ctx, val.intValue());
 	}
-	
+
 	@Override
 	public void exitBoolLiteral(BoolLiteralContext ctx) {
 		Boolean val = Boolean.valueOf(ctx.getText());
@@ -418,8 +313,65 @@ public void exitUnary_expr(Unary_exprContext ctx) {
 		expressionsEvaluatorValues.put(ctx, val ? 1 : 0);
 	}
 
+
+	private void evalOneLevelOfMathExpr(ParseTree tree) {
+		Integer val = expressionsEvaluatorValues.get(tree.getChild(0));
+		if( val != null) {
+			int i  = 1;
+			while (i < tree.getChildCount()) {
+				ParseTree opChild = tree.getChild(i++);
+				ParseTree newChild = tree.getChild(i++);
+				if( opChild instanceof TerminalNode) {
+					int type = ((TerminalNode)opChild).getSymbol().getType();
+					Integer newChildVal = expressionsEvaluatorValues.get(newChild);
+					
+					if( newChildVal != null) {
+						
+						switch(type)  {
+						case IDLParser.RIGHT_SHIFT:
+							val >>= newChildVal;
+							break;
+						case IDLParser.LEFT_SHIFT:
+							val <<= newChildVal;
+							break;
+						case IDLParser.PLUS:
+							val += newChildVal;
+							break;
+						case IDLParser.MINUS:
+							val -= newChildVal;
+							break;
+						case IDLParser.STAR:
+							val *= newChildVal;
+							break;
+						case IDLParser.SLASH:
+							val /= newChildVal;
+							break;
+						case IDLParser.PERCENT:
+							val %= newChildVal;
+							break;
+						case IDLParser.AMPERSAND:
+							val &= newChildVal;
+							break;
+						case IDLParser.PIPE:
+							val |= newChildVal;
+							break;
+						case IDLParser.CARET:
+							val ^= newChildVal;
+							break;
+							
+						default:
+							System.err.println("OOPS!");
+							break;
+						}
+					}	
+				}	
+			}
+			expressionsEvaluatorValues.put(tree, val);
+		}
+		
+	}
 	
-	
+
 	/*
 	 * Helpers
 	 */
