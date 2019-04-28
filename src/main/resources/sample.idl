@@ -1,0 +1,46 @@
+// test
+
+// test
+#include "includeSample.idl"
+
+module moduleName {
+	const int test =  1 + (5 * 2 + 8 / 3);
+	enum TemperatureScale {
+	    CELSIUS, 
+	    FAHRENHEIT,
+	    KELVIN
+	  };
+	   
+	  struct helper {
+	    string<4> toto;
+	    string titi;
+	  }; //@top-level false
+	  
+	  struct TempSensorType {
+	   sequence<short,4> id; //@key
+	    float temp[2 +2][8];
+	    float hum;
+	    TemperatureScale scale;
+	    string<4> toto;
+	    string titi;
+	  };
+	#pragma keylist TempSensorType id
+	
+	  struct KeylessTempSensorType {
+	    sequence<unsigned long long,5> id;
+	    float temp;
+	    float hum;
+	    TemperatureScale scale;
+	  };
+	#pragma keylist KeylessTempSensorType
+};
+// test
+module module2 {
+	
+	
+	  struct KeylessTempSensorType {
+	   moduleName::TemperatureScale scale;
+	    moduleName::TempSensorType sensor;
+	  };
+	#pragma keylist KeylessTempSensorType a.b
+};

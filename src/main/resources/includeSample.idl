@@ -1,0 +1,7 @@
+// InsideIncludeSample
+#include "includeSample2.idl"
+// test
+
+module includeSample {
+	const int test =  1 + (5 * 2 + 8 / 3);
+};
