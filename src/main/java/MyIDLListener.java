@@ -3,7 +3,9 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -36,6 +38,7 @@ import IDL.IDLParser.Shift_exprContext;
 import IDL.IDLParser.String_typeContext;
 import IDL.IDLParser.Struct_typeContext;
 import IDL.IDLParser.Toplevel_falseContext;
+import IDL.IDLParser.Type_declaratorContext;
 import IDL.IDLParser.Type_specContext;
 import IDL.IDLParser.Unary_exprContext;
 import IDL.IDLParser.Xor_exprContext;
@@ -48,9 +51,21 @@ public class MyIDLListener extends IDLParserBaseListener {
 	HashMap<String,Object> constValues = new HashMap<>();
 	
 	Deque<Type> typeStack = new ArrayDeque<>();
+
+	private CommonTokenStream tokens;
+	
 	MyIDLListener() {
 		typeStack.push(new Type("Root",""));
 	}
+	
+	
+
+	public MyIDLListener(CommonTokenStream tokens) {
+		typeStack.push(new Type("Root",""));
+		this.tokens = tokens;
+	}
+
+
 
 	@Override
 	public void enterModule(ModuleContext ctx) {
@@ -130,7 +145,17 @@ public class MyIDLListener extends IDLParserBaseListener {
 		popType();
 	}
 
-
+	@Override
+	public void enterType_declarator(Type_declaratorContext ctx) {
+		pushType(ctx,1,"Typedef");
+	}
+	
+	@Override
+	public void exitType_declarator(Type_declaratorContext ctx) {
+		popType();
+	}
+	
+	
 	@Override
 	public void enterKey_name(Key_nameContext ctx) {
 		pushType(ctx,0,"KeyName");
@@ -498,8 +523,22 @@ public class MyIDLListener extends IDLParserBaseListener {
 
 	}
 
-	private void  pushType(ParserRuleContext ctx, int index, String typeName) {		
+	private void  pushType(ParserRuleContext ctx, int index, String typeName) {	
+		
 		Type type = addType( ctx,  index,  typeName);
+		
+		Token startToken = ctx.getStart();
+		int tokenIndex = startToken.getTokenIndex();
+		List<Token> comments = tokens.getHiddenTokensToLeft(tokenIndex);
+		String commentsString = "";
+		for( Token token : comments) {
+			commentsString += token.getText();
+		}
+		commentsString = commentsString.trim();
+		if( !commentsString.isEmpty() && ! commentsString.startsWith("\n")) {
+			System.out.println(commentsString);
+		}
+		
 		typeStack.push(type);
 	}
 
