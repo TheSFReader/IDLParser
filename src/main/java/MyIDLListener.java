@@ -59,6 +59,15 @@ public class MyIDLListener extends IDLParserBaseListener {
 		typeStack.push(new Type("Root",""));
 		this.tokens = tokens;
 	}
+	
+	
+
+	public MyIDLListener(CommonTokenStream tokens) {
+		typeStack.push(new Type("Root",""));
+		this.tokens = tokens;
+	}
+
+
 
 	@Override
 	public void enterModule(ModuleContext ctx) {
@@ -517,7 +526,21 @@ public class MyIDLListener extends IDLParserBaseListener {
 	}
 
 	private void  pushType(ParserRuleContext ctx, int index, String typeName) {	
+		
 		Type type = addType( ctx,  index,  typeName);
+		
+		Token startToken = ctx.getStart();
+		int tokenIndex = startToken.getTokenIndex();
+		List<Token> comments = tokens.getHiddenTokensToLeft(tokenIndex);
+		String commentsString = "";
+		for( Token token : comments) {
+			commentsString += token.getText();
+		}
+		commentsString = commentsString.trim();
+		if( !commentsString.isEmpty() && ! commentsString.startsWith("\n")) {
+			System.out.println(commentsString);
+		}
+		
 		typeStack.push(type);
 	}
 
