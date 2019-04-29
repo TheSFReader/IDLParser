@@ -239,7 +239,7 @@ public class MyIDLListener extends IDLParserBaseListener {
 		Object val = expressionsEvaluatorValues.get(ctx.or_expr());
 		expressionsEvaluatorValues.put(ctx,val);
 		if( val != null) {
-			typeStack.peek().value += " (val : " + val + ")";
+			typeStack.peek().value = "" + val ;
 		}
 		popType();
 	}
@@ -520,19 +520,6 @@ public class MyIDLListener extends IDLParserBaseListener {
 	private void  pushType(ParserRuleContext ctx, int index, String typeName) {	
 		
 		Type type = addType( ctx,  index,  typeName);
-		
-		Token startToken = ctx.getStart();
-		int tokenIndex = startToken.getTokenIndex();
-		List<Token> comments = tokens.getHiddenTokensToLeft(tokenIndex);
-		String commentsString = "";
-		for( Token token : comments) {
-			commentsString += token.getText();
-		}
-		commentsString = commentsString.trim();
-		if( !commentsString.isEmpty() && ! commentsString.startsWith("\n")) {
-			System.out.println(commentsString);
-		}
-		
 		typeStack.push(type);
 	}
 
@@ -584,14 +571,16 @@ public class MyIDLListener extends IDLParserBaseListener {
 		Token startToken = tree.getStart();
 		int tokenIndex = startToken.getTokenIndex();
 		List<Token> comments = tokens.getHiddenTokensToLeft(tokenIndex);
-		for( Token token : comments) {
-			String strippedComment = token.getText().replaceAll("//","").trim();
-			if(!strippedComment.isBlank()) {
-				result.add(strippedComment + "\n");
+		if(comments != null) { 
+			for( Token token : comments) {
+				String strippedComment = token.getText().replaceAll("//","").trim();
+				if(!strippedComment.isBlank()) {
+					result.add(strippedComment + "\n");
+				}
 			}
-		}
-		if( !result.isEmpty()) {
-			return result;
+			if( !result.isEmpty()) {
+				return result;
+			}
 		}
 		return null;
 	}

@@ -51,6 +51,7 @@ public class mainclass {
     		
     		Type type = extractor.typeStack.pop();
     		System.out.println(type.output());
+    		System.out.println(type.outputIDL());
     	}
 
 }
