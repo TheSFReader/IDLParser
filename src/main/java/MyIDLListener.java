@@ -329,9 +329,14 @@ public class MyIDLListener extends IDLParserBaseListener {
 		if( val != null) {
 			if( val instanceof Integer) {
 				val = evalOneLevelOfMathExprInteger(tree);
+				expressionsEvaluatorValues.put(tree, val);
 			} else if( val instanceof Float) {
 				val = evalOneLevelOfMathExprFloat(tree);
+				expressionsEvaluatorValues.put(tree, val);
 			}
+		}
+		else {
+			System.out.println("OOOPS");
 		}
 		
 	}
