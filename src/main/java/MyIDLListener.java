@@ -1,9 +1,12 @@
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 
+import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeProperty;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -36,6 +39,7 @@ import IDL.IDLParser.Shift_exprContext;
 import IDL.IDLParser.String_typeContext;
 import IDL.IDLParser.Struct_typeContext;
 import IDL.IDLParser.Toplevel_falseContext;
+import IDL.IDLParser.Type_declaratorContext;
 import IDL.IDLParser.Type_specContext;
 import IDL.IDLParser.Unary_exprContext;
 import IDL.IDLParser.Xor_exprContext;
@@ -48,8 +52,12 @@ public class MyIDLListener extends IDLParserBaseListener {
 	HashMap<String,Object> constValues = new HashMap<>();
 	
 	Deque<Type> typeStack = new ArrayDeque<>();
-	MyIDLListener() {
+
+	private CommonTokenStream tokens;
+
+	public MyIDLListener(CommonTokenStream tokens) {
 		typeStack.push(new Type("Root",""));
+		this.tokens = tokens;
 	}
 
 	@Override
@@ -130,7 +138,17 @@ public class MyIDLListener extends IDLParserBaseListener {
 		popType();
 	}
 
-
+	@Override
+	public void enterType_declarator(Type_declaratorContext ctx) {
+		pushType(ctx,1,"Typedef");
+	}
+	
+	@Override
+	public void exitType_declarator(Type_declaratorContext ctx) {
+		popType();
+	}
+	
+	
 	@Override
 	public void enterKey_name(Key_nameContext ctx) {
 		pushType(ctx,0,"KeyName");
@@ -498,19 +516,20 @@ public class MyIDLListener extends IDLParserBaseListener {
 
 	}
 
-	private void  pushType(ParserRuleContext ctx, int index, String typeName) {		
+	private void  pushType(ParserRuleContext ctx, int index, String typeName) {	
 		Type type = addType( ctx,  index,  typeName);
 		typeStack.push(type);
 	}
 
 	private void  pushType(ParserRuleContext ctx, String typeName) {
 		String name = ctx.getText();
-		pushType(name,typeName);
+		List<String> comments = getPreComments(ctx);
+		pushType(name,typeName, comments);
 
 	}
 
-	private void  pushType(String name, String typeName) {
-		Type type = addType(name,typeName);
+	private void  pushType(String name, String typeName, List<String> comments) {
+		Type type = addType(name,typeName, comments);
 		typeStack.push(type);	
 	}
 
@@ -520,22 +539,46 @@ public class MyIDLListener extends IDLParserBaseListener {
 		if( child.getChildCount() > 0)
 			child = child.getChild(0);
 		String name = child.getText();
-		return addType(name,typeName);
+		
+		List<String> comments = getPreComments(ctx);
+		return addType(name,typeName, comments);
 	}
 
 
 	private Type addType(ParserRuleContext ctx, String typeName) {
-		return addType(ctx.getText(), typeName);
+		List<String> comments = getPreComments(ctx);
+		return addType(ctx.getText(), typeName, comments);
 	}
 
-	private Type addType(String name, String typeName) {
+	private Type addType(String name, String typeName, List<String> comments) {
 		Type type = new Type(name,typeName);
+		if(comments != null) {
+			type.commentlines = comments; 
+		}
 		typeStack.peek().children.add(type);
 		return type;
 	}
 
 	private void popType() {
 		typeStack.pop();
+	}
+	
+	
+	private List<String> getPreComments(ParserRuleContext tree) {
+		List<String> result = new ArrayList<>();
+		Token startToken = tree.getStart();
+		int tokenIndex = startToken.getTokenIndex();
+		List<Token> comments = tokens.getHiddenTokensToLeft(tokenIndex);
+		for( Token token : comments) {
+			String strippedComment = token.getText().replaceAll("//","").trim();
+			if(!strippedComment.isBlank()) {
+				result.add(strippedComment + "\n");
+			}
+		}
+		if( !result.isEmpty()) {
+			return result;
+		}
+		return null;
 	}
 
 }

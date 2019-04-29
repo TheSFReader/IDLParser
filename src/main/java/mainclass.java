@@ -16,19 +16,13 @@ import preprocessor.Preprocessor;
 public class mainclass {
 
 	public static void main(String[] args) {
-
-
-
-	
-    
-    		//try {
-			//CharStream input  = CharStreams.fromFileName("src/main/resources/sample.idl");
-			
+			String filename = "src/main/resources/sample.idl";
+			if(args.length > 0) {
+				filename = args[0];
+			}
 			
 
-    		
-    		
-    		final List<PreprocessedToken> loadedtokens = Preprocessor.load("src/main/resources/sample.idl");
+    		final List<PreprocessedToken> loadedtokens = Preprocessor.load(filename);
     		PreprocessedCharStream preprocessedinput = new PreprocessedCharStream(loadedtokens);
  			IDLLexer idllexer = new IDLLexer(preprocessedinput);
 
@@ -50,18 +44,13 @@ public class mainclass {
     		ParseTree tree = parser.specification(); // begin parsing at rule 'r'
     		
     		System.out.println(tree.toStringTree(parser)); // print LISP-style tree
-    		MyIDLListener extractor = new MyIDLListener();
+    		MyIDLListener extractor = new MyIDLListener(tokens);
     		
     		ParseTreeWalker.DEFAULT.walk(extractor, tree);
     		
     		
     		Type type = extractor.typeStack.pop();
     		System.out.println(type.output());
-    		
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
     	}
 
 }
