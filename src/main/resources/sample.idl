@@ -15,7 +15,7 @@ module moduleName {
 	   
 	  struct helper {
 	    string<4> toto;
-	    string titi;
+	    string titi,tata;
 	  }; //@top-level false
 	  
 	  struct TempSensorType {

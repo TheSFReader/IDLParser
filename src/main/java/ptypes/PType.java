@@ -1,15 +1,18 @@
+package ptypes;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Type {
+public class PType {
 
-	public Type(String string, String eventName) {
+	public static String oneIndent = "   ";
+	
+	public PType(String string, String eventName) {
 		value = string;
 		this.eventName = eventName;
 	}
-	Object value;
-	String eventName;
-	List<Type> children = new ArrayList<>();
+	public String value;
+	public String eventName;
+	public List<PType> children = new ArrayList<>();
 	public List<String> commentlines;
 
 	public String toString() {
@@ -20,6 +23,18 @@ public class Type {
 		return result;
 	}
 
+	
+	public String toIDL(String currentIndent) {
+		String result = currentIndent + eventName + " " + value + " {\n";
+		String childrenIndent = currentIndent + oneIndent;
+		for(PType child : children) {
+			result += child.toIDL(childrenIndent);
+		}
+		result += currentIndent + "};\n";
+		return result;
+	}
+	
+	
 
 	public String outputIDL() {
 		return outputIDL(0);
@@ -33,13 +48,13 @@ public class Type {
 		String result ="";
 		switch( eventName) {
 		case "": {
-			for( Type child : children) {
+			for( PType child : children) {
 				result += child.outputIDL(level);
 			}
 		}
 		case "Module":
 			result += tabResult + "module " + value+ "\n" + tabResult + "{\n";
-			for( Type child : children) {
+			for( PType child : children) {
 				result += child.outputIDL(level+1);
 			}
 			result += tabResult + "};\n";
@@ -48,14 +63,14 @@ public class Type {
 			result += tabResult + "enum " + value + "\n" + tabResult + "{\n";
 			String nextTabResult = getTabResult(level + 1);
 			for(int i = 0; i < children.size(); i++) {
-				Type child = children.get(i);
+				PType child = children.get(i);
 				result += nextTabResult + child.value + ((i < children.size() -1) ? ",\n" : "\n");
 			}
 			result += tabResult + "};\n";
 			break;
 		case "Struct":
 			result += tabResult + "struct " + value+ "\n" + tabResult + "{\n";
-			for( Type child : children) {
+			for( PType child : children) {
 				result += child.outputIDL(level+1);
 			}
 			result += tabResult + "};\n";
@@ -66,7 +81,7 @@ public class Type {
 			}
 			boolean hasAtKey = false;
 			for( int i = 1; i < children.size(); i++) {
-				Type child = children.get(i);
+				PType child = children.get(i);
 				if( child.eventName.equals("AtKey")) {
 					hasAtKey = true;
 				} else if(child.eventName.equals("FixedArraySize") ) {
@@ -109,7 +124,7 @@ public class Type {
 		}
 		else {
 			result += "\n" + outputComment(level);
-			for( Type child : children) {
+			for( PType child : children) {
 				result += child.output(level+1);
 			}
 			result+= tabResult + "/" + value + "\n";

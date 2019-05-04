@@ -12,6 +12,7 @@ import IDL.IDLTokenFactory;
 import preprocessor.PreprocessedCharStream;
 import preprocessor.PreprocessedToken;
 import preprocessor.Preprocessor;
+import ptypes.PType;
     
 public class mainclass {
 
@@ -49,9 +50,10 @@ public class mainclass {
     		ParseTreeWalker.DEFAULT.walk(extractor, tree);
     		
     		
-    		Type type = extractor.typeStack.pop();
+    		PType type = extractor.typeStack.pop();
     		System.out.println(type.output());
-    		System.out.println(type.outputIDL());
+    		//System.out.println(type.outputIDL());
+    		System.out.println(type.toIDL(""));
     	}
 
 }
