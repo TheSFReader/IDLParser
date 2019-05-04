@@ -34,118 +34,37 @@ public class PType {
 		return result;
 	}
 	
-	
-
-	public String outputIDL() {
-		return outputIDL(0);
-
-	}
-
-
-	private String outputIDL(int level) {
-		String tabResult = getTabResult(level);
-
-		String result ="";
-		switch( eventName) {
-		case "": {
-			for( PType child : children) {
-				result += child.outputIDL(level);
-			}
-		}
-		case "Module":
-			result += tabResult + "module " + value+ "\n" + tabResult + "{\n";
-			for( PType child : children) {
-				result += child.outputIDL(level+1);
-			}
-			result += tabResult + "};\n";
-			break;
-		case "Enum":
-			result += tabResult + "enum " + value + "\n" + tabResult + "{\n";
-			String nextTabResult = getTabResult(level + 1);
-			for(int i = 0; i < children.size(); i++) {
-				PType child = children.get(i);
-				result += nextTabResult + child.value + ((i < children.size() -1) ? ",\n" : "\n");
-			}
-			result += tabResult + "};\n";
-			break;
-		case "Struct":
-			result += tabResult + "struct " + value+ "\n" + tabResult + "{\n";
-			for( PType child : children) {
-				result += child.outputIDL(level+1);
-			}
-			result += tabResult + "};\n";
-			break;
-		case "Member":
-			if(children.size() > 0) {
-				result += tabResult + children.get(0).value + " " + value;
-			}
-			boolean hasAtKey = false;
-			for( int i = 1; i < children.size(); i++) {
-				PType child = children.get(i);
-				if( child.eventName.equals("AtKey")) {
-					hasAtKey = true;
-				} else if(child.eventName.equals("FixedArraySize") ) {
-					result += "[" + child.value + "]";
-				}
-			}
-			result += ";";
-			if( hasAtKey) {
-				result += " //@key";
-			}
-			result += "\n";
-			break;
-
-		}
-
-		return result;
-	}
-
-	private String getTabResult( int level) {
-		String tabResult = "";
-		for( int i = 0; i < level; i++) {
-			tabResult += "   "; 
-		}
-		return tabResult;
-	}
 
 	public String output() {
-		return output(0);
+		return output("");
 	}
 
-	public String output(int level) {
-		String tabResult = "";
-		for( int i = 0; i < level; i++) {
-			tabResult += "\t"; 
-		}
-		String result = tabResult + value + "(" + eventName + ")";
-
+	public String output(String indent) {
+		String result = indent + value + "(" + eventName + ")";
 		if(children.isEmpty()) {
-			result += "\n" + outputComment(level);
+			result += "\n" + outputComment(indent);
 		}
 		else {
-			result += "\n" + outputComment(level);
+			result += "\n" + outputComment(indent);
 			for( PType child : children) {
-				result += child.output(level+1);
+				result += child.output(indent+ oneIndent);
 			}
-			result+= tabResult + "/" + value + "\n";
+			result+= indent + "/" + value + "\n";
 		}
 
 		return result;
 	}
-	String outputComment(int level) {
+	String outputComment(String indent) {
 
 		if(commentlines == null || commentlines.isEmpty()) {
 			return "";
 		}
 
-		String tabResult = "";
-		for( int i = 0; i < level-1; i++) {
-			tabResult += "\t"; 
-		}
+		
 
 		String result = "";
 		for( String comment : commentlines) {
-			result += tabResult + "// " + comment;
+			result += indent + "// " + comment;
 		}
 		return result;
 	}

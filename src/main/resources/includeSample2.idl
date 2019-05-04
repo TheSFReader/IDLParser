@@ -1,7 +1,7 @@
 // InsideIncludeSample
 
 // test
-module includeSample {
+module includeSample2 {
 
 	const int test =  1 + (5 * 2 + 8 / 3);
 };
