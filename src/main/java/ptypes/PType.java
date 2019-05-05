@@ -24,6 +24,14 @@ public class PType {
 	}
 
 	
+	public String toIDL() {
+		String result = "";
+		for(PType child : children) {
+			result += child.toIDL("");
+		}
+		return result;
+	}
+	
 	public String toIDL(String currentIndent) {
 		String result = currentIndent + eventName + " " + value + " {\n";
 		String childrenIndent = currentIndent + oneIndent;
