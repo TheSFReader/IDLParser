@@ -52,7 +52,7 @@ public class mainclass {
     		
     		PType type = extractor.typeStack.pop();
     		System.out.println(type.output());
-    		System.out.println(type.toIDL(""));
+    		System.out.println(type.toIDL());
     	}
 
 }

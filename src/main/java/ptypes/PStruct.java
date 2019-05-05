@@ -8,7 +8,7 @@ public class PStruct extends PType{
 	
 	@Override
 	public String toIDL(String currentIndent) {
-		String result = currentIndent + "struct" + " " + value + " {\n";
+		String result = outputComment(currentIndent) + currentIndent + "struct" + " " + value + " {\n";
 		String noTopLevel = "";
 		String childrenIndent = currentIndent + oneIndent;
 		for(PType child : children) {

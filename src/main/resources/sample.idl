@@ -1,7 +1,7 @@
 // test
 
 // test
-//include "includeSample.idl"
+//#include "includeSample.idl"
 
 module moduleName {
 	const int a = (1 << 3) + 2;

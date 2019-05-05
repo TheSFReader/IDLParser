@@ -24,6 +24,15 @@ public class PType {
 	}
 
 	
+	public String toIDL() {
+		String result="";
+		for(PType child : children) {
+			result += child.toIDL("");
+		}
+		result += "\n";
+		return result;
+	}
+	
 	public String toIDL(String currentIndent) {
 		String result = currentIndent + eventName + " " + value + " {\n";
 		String childrenIndent = currentIndent + oneIndent;
@@ -54,13 +63,12 @@ public class PType {
 
 		return result;
 	}
+	
 	String outputComment(String indent) {
 
 		if(commentlines == null || commentlines.isEmpty()) {
 			return "";
 		}
-
-		
 
 		String result = "";
 		for( String comment : commentlines) {
@@ -68,4 +76,6 @@ public class PType {
 		}
 		return result;
 	}
+	
+	
 }

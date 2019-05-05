@@ -8,7 +8,7 @@ public class PMember extends PType {
 	
 	@Override
 	public String toIDL(String currentIndent) {
-		String result = "";
+		String result = outputComment(currentIndent);
 		String typeSpecName = null;
 		for(PType child : children) {
 			if( child.eventName.contentEquals("TypeSpec")) {
