@@ -534,7 +534,7 @@ public class MyIDLListener extends IDLParserBaseListener {
 
 	private void addToLastBrother(String name, String typeName) {
 		PType type = new PType(name,typeName);
-		getLastBrother().children.add(type);
+		getLastBrother().addChild(type);
 
 	}
 
@@ -619,7 +619,7 @@ public class MyIDLListener extends IDLParserBaseListener {
 		if(comments != null) {
 			type.commentlines = comments; 
 		}
-		typeStack.peek().children.add(type);
+		typeStack.peek().addChild(type);
 		return type;
 	}
 
