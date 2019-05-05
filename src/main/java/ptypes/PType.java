@@ -6,10 +6,13 @@ public class PType {
 
 	public static String oneIndent = "   ";
 	
+	
 	public PType(String string, String eventName) {
 		value = string;
 		this.eventName = eventName;
 	}
+	
+	public PType parent = null;
 	public String value;
 	public String eventName;
 	public List<PType> children = new ArrayList<>();
@@ -23,6 +26,19 @@ public class PType {
 		return result;
 	}
 
+	public void addChild(PType newChild) {
+		children.add(newChild);
+		newChild.parent = this;
+	}
+	
+	public String toIDL() {
+		String result="";
+		for(PType child : children) {
+			result += child.toIDL("");
+		}
+		result += "\n";
+		return result;
+	}
 	
 	public String toIDL() {
 		String result = "";
@@ -62,13 +78,12 @@ public class PType {
 
 		return result;
 	}
+	
 	String outputComment(String indent) {
 
 		if(commentlines == null || commentlines.isEmpty()) {
 			return "";
 		}
-
-		
 
 		String result = "";
 		for( String comment : commentlines) {
@@ -76,4 +91,6 @@ public class PType {
 		}
 		return result;
 	}
+	
+	
 }

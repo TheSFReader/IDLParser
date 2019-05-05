@@ -7,7 +7,7 @@ public class PEnum extends PType {
 	} 
 	
 	public String toIDL(String currentIndent) {
-		String result = currentIndent + "enum" + " " + value + " {\n";
+		String result = outputComment(currentIndent) + currentIndent + "enum" + " " + value + " {\n";
 		String childrenIndent = currentIndent + oneIndent;
 		for(int i = 0; i < children.size() -1; i++) {
 			result += childrenIndent + children.get(i).value + ",\n";

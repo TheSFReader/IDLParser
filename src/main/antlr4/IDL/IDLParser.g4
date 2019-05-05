@@ -260,7 +260,7 @@ positive_int_const
 
 type_decl
    : struct_type
-   | KW_TYPEDEF type_declarator
+   | type_declarator
    | union_type
    | enum_type
    | KW_NATIVE simple_declarator
@@ -268,7 +268,7 @@ type_decl
    ;
 
 type_declarator
-   : type_spec declarators
+   : KW_TYPEDEF type_spec declarators
    ;
 
 type_spec

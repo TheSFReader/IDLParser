@@ -8,7 +8,7 @@ public class PModule extends PType{
 	
 	@Override
 	public String toIDL(String currentIndent) {
-		String result = currentIndent + "module" + " " + value + " {\n";
+		String result = outputComment(currentIndent) + currentIndent + "module" + " " + value + " {\n";
 		String childrenIndent = currentIndent + oneIndent;
 		for(PType child : children) {
 			result += child.toIDL(childrenIndent);

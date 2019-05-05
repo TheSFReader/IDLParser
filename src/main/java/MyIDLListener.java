@@ -55,6 +55,7 @@ import ptypes.PModule;
 import ptypes.PStruct;
 import ptypes.PType;
 import ptypes.PTypeSpec;
+import ptypes.PTypedef;
 
 public class MyIDLListener extends IDLParserBaseListener {
 
@@ -152,7 +153,7 @@ public class MyIDLListener extends IDLParserBaseListener {
 
 	@Override
 	public void enterType_declarator(Type_declaratorContext ctx) {
-		pushType(ctx,1,"Typedef");
+		pushType(ctx,0,"Typedef");
 	}
 	
 	@Override
@@ -533,7 +534,7 @@ public class MyIDLListener extends IDLParserBaseListener {
 
 	private void addToLastBrother(String name, String typeName) {
 		PType type = new PType(name,typeName);
-		getLastBrother().children.add(type);
+		getLastBrother().addChild(type);
 
 	}
 
@@ -607,20 +608,18 @@ public class MyIDLListener extends IDLParserBaseListener {
 			type = new PKeyDef(name,typeName);
 			break;
 			
-			
+		case "Typedef":
+			type = new PTypedef(name,typeName);
+			break;			
 		}
 
-	
 		
 		if( type == null) type = new PType(name,typeName);
-		
-		
-		
 		
 		if(comments != null) {
 			type.commentlines = comments; 
 		}
-		typeStack.peek().children.add(type);
+		typeStack.peek().addChild(type);
 		return type;
 	}
 

@@ -20,9 +20,9 @@ public class PConst extends PType {
 		}
 		
 		if( typeName != null && constValue != null && this.value != null) {
-			return currentIndent + "const " + typeName + " " + this.value + " = " + constValue + ";\n";
+			return outputComment(currentIndent) + currentIndent + "const " + typeName + " " + this.value + " = " + constValue + ";\n";
 		}
-		return null;
+		return "";
 	}
 
 }

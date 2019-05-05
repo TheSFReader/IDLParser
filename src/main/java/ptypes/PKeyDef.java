@@ -23,7 +23,7 @@ public class PKeyDef extends PType {
 		}
 		
 		if( structName != null) {
-			String result = currentIndent+ "#pragma keylist " + structName;
+			String result = outputComment(currentIndent) + currentIndent+ "#pragma keylist " + structName;
 			for(String key : keys) {
 				result += " " + key;
 			}
