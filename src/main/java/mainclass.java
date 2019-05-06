@@ -24,8 +24,9 @@ public class mainclass {
 			
 
     		final List<PreprocessedToken> loadedtokens = Preprocessor.load(filename);
+    		
     		PreprocessedCharStream preprocessedinput = new PreprocessedCharStream(loadedtokens);
- 			IDLLexer idllexer = new IDLLexer(preprocessedinput);
+    		IDLLexer idllexer = new IDLLexer(preprocessedinput);
 
     		idllexer.setTokenFactory(new IDLTokenFactory(preprocessedinput));
  			//idllexer.setTokenFactory(new CommonTokenFactory(true));
@@ -53,6 +54,11 @@ public class mainclass {
     		PType type = extractor.typeStack.pop();
     		System.out.println(type.output());
     		System.out.println(type.toIDL());
+    		
+    		
+    		PType module = type.findPType("moduleName");
+    		
+    		System.out.println(module.findPType("moduleName::TempSensorType.hum").value);
     	}
 
 }

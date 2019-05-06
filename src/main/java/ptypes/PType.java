@@ -1,6 +1,8 @@
 package ptypes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PType {
 
@@ -30,7 +32,7 @@ public class PType {
 		children.add(newChild);
 		newChild.parent = this;
 	}
-	
+
 	public String toIDL() {
 		String result="";
 		for(PType child : children) {
@@ -39,15 +41,8 @@ public class PType {
 		result += "\n";
 		return result;
 	}
-	
-	public String toIDL() {
-		String result = "";
-		for(PType child : children) {
-			result += child.toIDL("");
-		}
-		return result;
-	}
-	
+
+
 	public String toIDL(String currentIndent) {
 		String result = currentIndent + eventName + " " + value + " {\n";
 		String childrenIndent = currentIndent + oneIndent;
@@ -57,7 +52,7 @@ public class PType {
 		result += currentIndent + "};\n";
 		return result;
 	}
-	
+
 
 	public String output() {
 		return output("");
@@ -78,7 +73,7 @@ public class PType {
 
 		return result;
 	}
-	
+
 	String outputComment(String indent) {
 
 		if(commentlines == null || commentlines.isEmpty()) {
@@ -91,6 +86,43 @@ public class PType {
 		}
 		return result;
 	}
-	
-	
+
+	public PType findPType(String trail) {
+		String[] cutTrail = trail.split("[.:]");
+		List<String> trailList = Arrays.asList(cutTrail);
+		
+		// Filter out empty elements;
+		trailList =  trailList.stream()
+			    .filter(p -> !p.isEmpty()).collect(Collectors.toList());
+		
+		if(trailList.isEmpty()) {
+			return null;
+		}
+		
+		
+		PType currentScope = this;
+		PType found = null;
+		while (found == null && currentScope != null) {
+			// At each level going up, check if we find the definition going down
+			found =  currentScope.findTypeDescending(trailList, 0);
+			currentScope = currentScope.parent;
+		}
+		return found;
+	}
+
+	protected PType findTypeDescending(List<String> list, int index) {
+		String name = list.get(index);
+		for(PType child : children ) {
+			if(name.equals(child.value)) {
+				if(list.size() == index +1) {
+					return child;
+				}
+				PType childFound = child.findTypeDescending(list, index + 1);
+				if(  childFound != null) {
+					return childFound;
+				}
+			}
+		}
+		return null;
+	}
 }
