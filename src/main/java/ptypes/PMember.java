@@ -10,28 +10,48 @@ public class PMember extends PType {
 	public String toIDL(String currentIndent) {
 		String result = outputComment(currentIndent);
 		String typeSpecName = null;
-		String atKey = "";
+		String atKey = hasKey() ? " //@key" : "";
 		String declarator = "";
 		for(PType child : children) {
 			if( child.eventName.contentEquals("TypeSpec")) {
 				typeSpecName = child.toIDL(currentIndent);
 			} else if( child.eventName.contentEquals("Declarator")) {
 				declarator = child.toIDL(currentIndent);
-			}else if( child.eventName.contentEquals("AtKey")) {
-				atKey = " //@key";
+				result += currentIndent + typeSpecName + " " + declarator + ";" + atKey + "\n";
 			}
 		}
-		result += currentIndent + typeSpecName + " " + declarator + ";" + atKey + "\n";
 		return result;
 	}
 	
-	String getKeyList() {
+	String getTypeSpec() {
 		for(PType child : children) {
-			if( child.eventName.contentEquals("AtKey")) {
-				return " " + value;
-			}
+			if( child.eventName.contentEquals("TypeSpec")) {
+				return child.value;
+			} 
 		}
 		return "";
 	}
+	boolean hasKey() {
+		for(PType child : children) {
+			if( child.eventName.contentEquals("AtKey")) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	String getKeyList() {
+		if( ! hasKey()) {
+			return "";
+		}
+		String result = "";
+		for(PType child : children) {
+			if( child.eventName.contentEquals("Declarator")) {
+				result += " " + child.value;
+			}
+		}
+		return result;
+	}
 
+	
 }

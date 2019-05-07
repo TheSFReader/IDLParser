@@ -27,8 +27,17 @@ public class PKeyDef extends PType {
 			for(String key : keys) {
 				result += " " + key;
 			}
-			result += "\n";
+			result += "\n\n";
 			return result;
+		}
+		return "";
+	}
+
+	public String getDefinedStructName() {
+		for(PType child : children) {
+			if( child.eventName.contentEquals("KeyName")) {
+				return child.value;
+			}
 		}
 		return "";
 	}
